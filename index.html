@@ -343,7 +343,7 @@ input::placeholder{color:var(--hint)}
         </div>
         <div class="form-group">
           <label>Название</label>
-          <input type="text" id="add-name" placeholder="например: Korzinka">
+          <input type="text" id="add-name" placeholder="например: Магазин, Кола">
         </div>
         <div class="form-group">
           <label>Категория</label>
@@ -449,7 +449,7 @@ input::placeholder{color:var(--hint)}
     <div class="form-group">
       <label>Эмодзи</label>
       <div class="emoji-row" id="wish-emoji-row">
-        🎮 ✈️ 🚗 📱 💻 👟 🏠 🎓 💍 🎸 🏋️ 🌴 ⌚ 📷 🎯
+        🎮 ✈️ 🚗 📱 💻 👟 🏠 🎓 ⌚ 🎯
       </div>
       <input type="text" id="wish-emoji-input" placeholder="или свой эмодзи" maxlength="2">
     </div>
@@ -476,7 +476,7 @@ input::placeholder{color:var(--hint)}
     <div class="form-group">
       <label>Эмодзи</label>
       <div class="emoji-row" id="cat-emoji-row">
-        🍔 🚕 🏠 👗 💊 📚 🎬 ⚽ ☕ 🛒 💇 🐾 🔧 🎁 ✈️ 💼 💻 📈 💰 🏦
+        🍔 🚕 🏠 👗 💊 📚 🎬 ☕ 🛒 💼 💻 💰
       </div>
       <input type="text" id="cat-emoji-input" placeholder="или свой эмодзи" maxlength="2">
     </div>
@@ -747,6 +747,7 @@ function setType(t) {
   currentType = t; selectedCat = '';
   document.getElementById('btn-expense').className = t==='expense' ? 'active-expense' : '';
   document.getElementById('btn-income').className  = t==='income'  ? 'active-income'  : '';
+  document.getElementById('add-name').placeholder  = t==='expense' ? 'например: Магазин, Кола' : 'например: Аванс, прибыль';
   renderCatChips();
 }
 
@@ -905,18 +906,25 @@ function generateRecs(balance, savings) {
     });
   } else {
     if (savings >= 10000000) {
-      html += `<div class="rec-card"><div class="rec-icon">🏦</div>
-        <div class="rec-title">Депозит в банке</div>
-        <div class="rec-text">У тебя <span class="rec-highlight">${fmt(savings)}</span> свободных. Депозит в Kapitalbank или TBC даёт до 22% годовых — это <span class="rec-highlight">${fmt(Math.round(savings*0.22))}</span> за год.</div></div>`;
+      html += `<div class="rec-card"><div class="rec-icon">💡</div>
+        <div class="rec-title">Правило трёх частей</div>
+        <div class="rec-text">У тебя <span class="rec-highlight">${fmt(savings)}</span> свободных. Мудрый подход: треть — на нужды, треть — в резерв, треть — на цели. Резерв должен покрывать минимум 3 месяца расходов.</div></div>`;
+    }
+    if (savings >= 5000000) {
+      html += `<div class="rec-card"><div class="rec-icon">🛡️</div>
+        <div class="rec-title">Подушка безопасности</div>
+        <div class="rec-text">Финансовая подушка — это <span class="rec-highlight">3–6 месячных бюджетов</span> в резерве. Она защищает от неожиданных расходов и даёт спокойствие. Если её ещё нет — самое время начать.</div></div>`;
     }
     if (savings >= 3000000) {
-      html += `<div class="rec-card"><div class="rec-icon">📈</div>
-        <div class="rec-title">Стратегия 30%</div>
-        <div class="rec-text">Откладывай по <span class="rec-highlight">${fmt(Math.round(savings*0.3))}</span> каждый месяц. Через год у тебя будет <span class="rec-highlight">${fmt(Math.round(savings*0.3*12))}</span>.</div></div>`;
+      html += `<div class="rec-card"><div class="rec-icon">📦</div>
+        <div class="rec-title">Стратегия конвертов</div>
+        <div class="rec-text">Раздели остаток по целям прямо сейчас: <span class="rec-highlight">${fmt(Math.round(savings*0.5))}</span> — на текущие нужды, <span class="rec-highlight">${fmt(Math.round(savings*0.3))}</span> — в резерв, <span class="rec-highlight">${fmt(Math.round(savings*0.2))}</span> — на мечту.</div></div>`;
     }
-    html += `<div class="rec-card"><div class="rec-icon">🎯</div>
-      <div class="rec-title">Добавь цель!</div>
-      <div class="rec-text">Свободные <span class="rec-highlight">${fmt(savings)}</span> ждут применения. Добавь желание — и увидишь конкретный срок.</div></div>`;
+    if (savings > 0) {
+      html += `<div class="rec-card"><div class="rec-icon">🎯</div>
+        <div class="rec-title">Добавь цель!</div>
+        <div class="rec-text">Свободные <span class="rec-highlight">${fmt(savings)}</span> ждут применения. Добавь желание — и увидишь через сколько месяцев ты к нему придёшь.</div></div>`;
+    }
   }
   return html;
 }
@@ -980,6 +988,7 @@ async function deleteCat(id) {
 }
 
 // ─── DRAG & DROP REORDER ──────────────────────────────────
+// ─── TOUCH SORT (mobile-friendly) ────────────────────────
 let dragSrc = null;
 function setupDragDrop() {
   ['expense','income'].forEach(type => renderCatManage(type));
@@ -990,43 +999,64 @@ function renderCatManage(type) {
   if (!el) return;
   const cats = categories.filter(c=>c.cat_type===type);
   el.innerHTML = cats.map(c => `
-    <div class="cat-manage-item" draggable="true" data-id="${c.id}" data-type="${type}"
-      ondragstart="onDragStart(event)" ondragover="onDragOver(event)"
-      ondrop="onDrop(event)" ondragend="onDragEnd(event)">
-      <span class="drag-handle">⠿</span>
+    <div class="cat-manage-item" data-id="${c.id}" data-type="${type}">
+      <span class="drag-handle" onmousedown="initDrag(event,this)" ontouchstart="initDrag(event,this)">⠿</span>
       <span class="cat-emoji-big">${c.emoji}</span>
       <span class="cat-item-name">${esc(c.name)}</span>
       <button class="cat-del-btn" onclick="deleteCat('${c.id}')">×</button>
     </div>`).join('');
 }
 
-function onDragStart(e) {
-  dragSrc = e.currentTarget;
-  e.dataTransfer.effectAllowed = 'move';
-  setTimeout(() => dragSrc.classList.add('dragging'), 0);
-}
-function onDragOver(e) {
+let dragEl=null, dragClone=null, dragOffY=0, dragType='';
+function initDrag(e, handle) {
   e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  const target = e.currentTarget;
-  if (target !== dragSrc && target.classList.contains('cat-manage-item')) {
-    const rect = target.getBoundingClientRect();
-    const mid  = rect.top + rect.height/2;
-    target.parentNode.insertBefore(dragSrc, e.clientY < mid ? target : target.nextSibling);
+  dragEl = handle.closest('.cat-manage-item');
+  dragType = dragEl.dataset.type;
+  const rect = dragEl.getBoundingClientRect();
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  dragOffY = clientY - rect.top;
+  dragClone = dragEl.cloneNode(true);
+  dragClone.style.cssText = `position:fixed;left:${rect.left}px;width:${rect.width}px;
+    top:${rect.top}px;opacity:0.85;z-index:999;pointer-events:none;
+    background:var(--surface2);border-radius:var(--radius-sm);`;
+  document.body.appendChild(dragClone);
+  dragEl.style.opacity = '0.3';
+  document.addEventListener('mousemove', onDragMove);
+  document.addEventListener('touchmove', onDragMove, {passive:false});
+  document.addEventListener('mouseup', onDragEnd);
+  document.addEventListener('touchend', onDragEnd);
+}
+function onDragMove(e) {
+  if (!dragClone) return;
+  e.preventDefault();
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  dragClone.style.top = (clientY - dragOffY) + 'px';
+  const container = document.getElementById(`cat-manage-${dragType}`);
+  const items = [...container.querySelectorAll('.cat-manage-item')].filter(i=>i!==dragEl);
+  for (const item of items) {
+    const rect = item.getBoundingClientRect();
+    if (clientY < rect.top + rect.height/2) {
+      container.insertBefore(dragEl, item);
+      return;
+    }
   }
+  container.appendChild(dragEl);
 }
-async function onDrop(e) {
-  e.preventDefault();
-}
-async function onDragEnd(e) {
-  dragSrc.classList.remove('dragging');
-  const type = dragSrc.dataset.type;
-  const container = document.getElementById(`cat-manage-${type}`);
+async function onDragEnd() {
+  if (!dragEl) return;
+  dragEl.style.opacity = '';
+  dragClone?.remove();
+  dragClone = null;
+  document.removeEventListener('mousemove', onDragMove);
+  document.removeEventListener('touchmove', onDragMove);
+  document.removeEventListener('mouseup', onDragEnd);
+  document.removeEventListener('touchend', onDragEnd);
+  const container = document.getElementById(`cat-manage-${dragType}`);
   const newOrder = [...container.querySelectorAll('.cat-manage-item')].map(el=>el.dataset.id);
-  await api('POST', '/categories/reorder', { telegram_id: TG_ID, cat_type: type, ordered_ids: newOrder });
+  await api('POST', '/categories/reorder', { telegram_id: TG_ID, cat_type: dragType, ordered_ids: newOrder });
   categories = (await api('GET', `/categories?telegram_id=${TG_ID}`)) || [];
   renderCatChips();
-  dragSrc = null;
+  dragEl = null;
 }
 
 // ─── SETTINGS ─────────────────────────────────────────────
