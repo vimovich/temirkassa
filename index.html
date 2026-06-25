@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Temir Kassa</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+/* ── THEMES ─────────────────────────────────────────────── */
+:root {
+  --bg: #0f0f14; --surface: #1a1a24; --surface2: #222230;
+  --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
+  --text: #f0f0f5; --muted: rgba(240,240,245,0.45); --hint: rgba(240,240,245,0.22);
+  --green: #4ecb8d; --green-dim: rgba(78,203,141,0.15);
+  --red: #f06b6b; --red-dim: rgba(240,107,107,0.15);
+  --amber: #f5a623; --amber-dim: rgba(245,166,35,0.15);
+  --purple: #a78bfa; --purple-dim: rgba(167,139,250,0.15);
+  --blue: #60a5fa; --radius: 14px; --radius-sm: 10px;
+}
+[data-theme="light"] {
+  --bg: #eef4fc; --surface: #ffffff; --surface2: #ddeaf8;
+  --border: rgba(56,110,180,0.13); --border2: rgba(56,110,180,0.22);
+  --text: #0f1f35; --muted: rgba(15,31,53,0.45); --hint: rgba(15,31,53,0.22);
+  --green: #0a8f5c; --green-dim: rgba(10,143,92,0.1);
+  --red: #d63a3a; --red-dim: rgba(214,58,58,0.1);
+  --amber: #b87200; --amber-dim: rgba(184,114,0,0.1);
+  --purple: #6d4fc7; --purple-dim: rgba(109,79,199,0.1);
+  --blue: #2166b8;
+}
+
+/* ── BASE ───────────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
+  font-family:-apple-system,'SF Pro Display','Segoe UI',sans-serif;font-size:15px}
+
+/* ── LAYOUT ─────────────────────────────────────────────── */
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+.screen{display:none;flex:1;overflow-y:auto;padding:0 16px 100px}
+.screen.active{display:block}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);
+  border-top:1px solid var(--border);display:flex;z-index:100;
+  padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:10px 0;background:none;border:none;color:var(--muted);
+  font-size:10px;cursor:pointer;transition:color .15s}
+nav button.active{color:var(--green)}
+nav button svg{width:22px;height:22px}
+
+/* ── TYPOGRAPHY ─────────────────────────────────────────── */
+.amount-big{font-size:38px;font-weight:700;letter-spacing:-1.5px;font-variant-numeric:tabular-nums}
+.label-up{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted)}
+.section-title{font-size:12px;font-weight:600;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.8px;margin:20px 0 10px}
+
+/* ── CARDS ──────────────────────────────────────────────── */
+.card{background:var(--surface);border-radius:var(--radius);
+  padding:16px;border:1px solid var(--border)}
+.card-row{display:flex;justify-content:space-between;align-items:center}
+
+/* ── HERO ───────────────────────────────────────────────── */
+.hero{padding:16px 0 8px;text-align:center}
+.month-nav{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:6px}
+.month-nav button{background:none;border:none;color:var(--muted);
+  font-size:22px;cursor:pointer;padding:4px 10px;line-height:1}
+.month-label{font-size:14px;color:var(--text);font-weight:600;min-width:140px}
+.balance-label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.stat-card{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-sm);padding:12px 14px}
+.stat-card .s-label{font-size:10px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.8px;margin-bottom:4px}
+.stat-card .s-val{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.stat-card.income .s-val{color:var(--green)}
+.stat-card.expense .s-val{color:var(--red)}
+
+/* ── PROGRESS ───────────────────────────────────────────── */
+.progress-wrap{background:var(--surface2);border-radius:6px;height:6px;
+  overflow:hidden;margin:8px 0 4px}
+.progress-fill{height:100%;border-radius:6px;transition:width .5s ease}
+
+/* ── TRANSACTIONS ───────────────────────────────────────── */
+.day-group-label{font-size:11px;color:var(--hint);text-transform:uppercase;
+  letter-spacing:.8px;margin:16px 0 7px;font-weight:600}
+.tx-item{display:flex;align-items:center;gap:11px;padding:10px 13px;
+  background:var(--surface);border-radius:var(--radius-sm);
+  margin-bottom:6px;border:1px solid var(--border)}
+.tx-icon{width:38px;height:38px;border-radius:10px;display:flex;
+  align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.tx-info{flex:1;min-width:0}
+.tx-info .tx-name{font-size:14px;font-weight:500;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-info .tx-cat{font-size:11px;color:var(--muted)}
+.tx-amount{font-size:15px;font-weight:600;flex-shrink:0;font-variant-numeric:tabular-nums}
+.tx-amount.minus{color:var(--red)}
+.tx-amount.plus{color:var(--green)}
+.tx-delete{background:none;border:none;color:var(--hint);
+  font-size:20px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1}
+
+/* ── FORM ───────────────────────────────────────────────── */
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;color:var(--muted);
+  margin-bottom:6px;font-weight:500}
+input[type=text],input[type=number],input[type=tel],input[type=date],select,textarea{
+  width:100%;background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--radius-sm);padding:13px 14px;color:var(--text);
+  font-size:15px;font-family:inherit;outline:none;-webkit-appearance:none;
+  transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--green)}
+select option{background:var(--surface2);color:var(--text)}
+input::placeholder{color:var(--hint)}
+
+/* ── AMOUNT INPUT ───────────────────────────────────────── */
+.amount-input-wrap{position:relative}
+.amount-input-wrap input{padding-right:50px;font-size:18px;font-weight:600;
+  text-align:right;font-variant-numeric:tabular-nums}
+.amount-input-wrap .currency-label{position:absolute;right:14px;top:50%;
+  transform:translateY(-50%);font-size:13px;color:var(--muted);pointer-events:none}
+
+/* ── BUTTONS ────────────────────────────────────────────── */
+.btn{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);
+  font-size:15px;font-weight:600;cursor:pointer;
+  transition:opacity .15s,transform .1s;font-family:inherit}
+.btn:active{transform:scale(.97);opacity:.85}
+.btn-green{background:var(--green);color:#fff}
+[data-theme="light"] .btn-green{color:#fff}
+.btn-outline{background:none;border:1px solid var(--border2);color:var(--text)}
+.btn-red{background:var(--red-dim);color:var(--red);
+  border:1px solid rgba(240,107,107,.2)}
+.btn-sm{width:auto;padding:7px 13px;font-size:13px;border-radius:8px}
+.btn-icon{background:none;border:none;cursor:pointer;
+  padding:6px;color:var(--muted);font-size:18px;line-height:1}
+
+/* ── TYPE TOGGLE ────────────────────────────────────────── */
+.type-toggle{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px}
+.type-toggle button{padding:11px;border-radius:var(--radius-sm);
+  border:1px solid var(--border2);background:none;color:var(--muted);
+  font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
+.type-toggle button.active-expense{background:var(--red-dim);
+  border-color:rgba(240,107,107,.4);color:var(--red)}
+.type-toggle button.active-income{background:var(--green-dim);
+  border-color:rgba(78,203,141,.4);color:var(--green)}
+
+/* ── CAT CHIPS ──────────────────────────────────────────── */
+.cat-chips{display:flex;flex-wrap:wrap;gap:7px}
+.cat-chip{padding:8px 13px;border-radius:20px;border:1px solid var(--border2);
+  background:var(--surface2);font-size:13px;color:var(--text);
+  cursor:pointer;transition:all .15s;white-space:nowrap;font-family:inherit}
+.cat-chip.selected{border-color:var(--green);color:var(--green);background:var(--green-dim)}
+.cat-chip.add-chip{border-style:dashed;color:var(--muted)}
+
+/* ── CATEGORY MANAGER ───────────────────────────────────── */
+.cat-manage-item{display:flex;align-items:center;gap:10px;padding:11px 13px;
+  background:var(--surface);border-radius:var(--radius-sm);
+  margin-bottom:6px;border:1px solid var(--border);cursor:grab;
+  transition:opacity .15s;user-select:none}
+.cat-manage-item.dragging{opacity:.4;cursor:grabbing}
+.drag-handle{color:var(--hint);font-size:18px;cursor:grab;flex-shrink:0}
+.cat-manage-item .cat-emoji-big{font-size:20px;flex-shrink:0}
+.cat-manage-item .cat-item-name{flex:1;font-size:14px;font-weight:500}
+.cat-manage-item .cat-del-btn{background:none;border:none;
+  color:var(--hint);font-size:20px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1}
+
+/* ── ANALYTICS ──────────────────────────────────────────── */
+.cat-bar-row{margin-bottom:13px}
+.cat-bar-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.cat-bar-name{font-size:13px;display:flex;align-items:center;gap:7px}
+.cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.cat-bar-amount{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.cat-bar-pct{font-size:11px;color:var(--muted);margin-left:5px}
+
+/* ── WISHES ─────────────────────────────────────────────── */
+.wish-item{display:flex;align-items:center;gap:12px;padding:12px 13px;
+  background:var(--surface);border-radius:var(--radius-sm);
+  margin-bottom:8px;border:1px solid var(--border)}
+.wish-emoji-big{font-size:26px;flex-shrink:0}
+.wish-info{flex:1}
+.wish-name{font-size:14px;font-weight:500}
+.wish-price{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.wish-months{font-size:12px;color:var(--purple);font-weight:600;margin-top:2px}
+.wish-del{background:none;border:none;color:var(--hint);
+  font-size:20px;cursor:pointer;padding:4px;line-height:1}
+
+/* ── RECOMMENDATIONS ────────────────────────────────────── */
+.rec-card{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px;margin-bottom:10px}
+.rec-icon{font-size:22px;margin-bottom:7px}
+.rec-title{font-size:14px;font-weight:600;margin-bottom:4px}
+.rec-text{font-size:13px;color:var(--muted);line-height:1.55}
+.rec-highlight{color:var(--green);font-weight:600}
+.rec-highlight.purple{color:var(--purple)}
+.rec-highlight.amber{color:var(--amber)}
+
+/* ── SETTINGS ───────────────────────────────────────────── */
+.settings-row{display:flex;justify-content:space-between;align-items:center;
+  padding:13px 15px;background:var(--surface);border-radius:var(--radius-sm);
+  margin-bottom:7px;border:1px solid var(--border)}
+.s-title{font-size:14px;font-weight:500}
+.s-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* ── THEME TOGGLE ───────────────────────────────────────── */
+.theme-toggle{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px}
+.theme-btn{padding:10px;border-radius:var(--radius-sm);
+  border:1px solid var(--border2);background:none;color:var(--muted);
+  font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+.theme-btn.active{border-color:var(--green);color:var(--green);background:var(--green-dim)}
+
+/* ── MODAL ──────────────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);
+  z-index:200;display:flex;align-items:flex-end}
+.modal-overlay.hidden{display:none}
+.modal-box{background:var(--surface);border-radius:var(--radius) var(--radius) 0 0;
+  padding:20px 16px 32px;width:100%;max-height:88vh;overflow-y:auto}
+.modal-handle{width:36px;height:4px;background:var(--border2);
+  border-radius:2px;margin:0 auto 18px}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:18px}
+
+/* ── EMOJI PICKER ───────────────────────────────────────── */
+.emoji-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.emoji-row span{cursor:pointer;font-size:24px;padding:6px;
+  border-radius:10px;transition:background .12s;border:2px solid transparent}
+.emoji-row span.picked{background:var(--surface2);border-color:var(--green)}
+
+/* ── EMPTY ──────────────────────────────────────────────── */
+.empty{text-align:center;padding:36px 20px;color:var(--muted)}
+.empty .empty-icon{font-size:40px;margin-bottom:10px;opacity:.5}
+.empty p{font-size:14px;line-height:1.6}
+
+/* ── SETUP ──────────────────────────────────────────────── */
+#setup-screen{display:flex;flex-direction:column;justify-content:center;
+  align-items:center;min-height:100vh;padding:32px 24px;text-align:center}
+#setup-screen .logo{font-size:56px;margin-bottom:14px}
+#setup-screen h1{font-size:28px;font-weight:700;margin-bottom:8px}
+#setup-screen p{font-size:15px;color:var(--muted);margin-bottom:28px;line-height:1.6}
+.setup-card{width:100%;max-width:360px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+
+/* ── BADGE ──────────────────────────────────────────────── */
+.badge{display:inline-block;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-green{background:var(--green-dim);color:var(--green)}
+.badge-red{background:var(--red-dim);color:var(--red)}
+.badge-amber{background:var(--amber-dim);color:var(--amber)}
+
+/* ── LOADING ────────────────────────────────────────────── */
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;
+  align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:14px}
+#loading .spin{width:36px;height:36px;border:3px solid var(--border2);
+  border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── TOAST ──────────────────────────────────────────────── */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:24px;padding:10px 20px;font-size:14px;z-index:999;
+  opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* ── MORE CATS ──────────────────────────────────────────── */
+.more-cats-wrap{margin-top:6px}
+.more-cats-toggle{background:none;border:none;color:var(--blue);
+  font-size:13px;cursor:pointer;padding:4px 0;font-family:inherit}
+.more-cats{display:none;flex-wrap:wrap;gap:7px;margin-top:8px}
+.more-cats.open{display:flex}
+</style>
+</head>
+<body>
+<div id="loading"><div class="spin"></div><span style="color:var(--muted);font-size:14px">Загрузка…</span></div>
+
+<div id="app" style="display:none">
+  <!-- SETUP -->
+  <div id="setup-screen">
+    <div class="logo">💰</div>
+    <h1>Temir Kassa</h1>
+    <p>Твой личный финансовый<br>помощник в Telegram</p>
+    <div class="setup-card">
+      <div class="form-group">
+        <label>Как тебя зовут?</label>
+        <input type="text" id="setup-name" placeholder="Имя">
+      </div>
+      <div class="form-group">
+        <label>Бюджет на этот месяц (сум)</label>
+        <div class="amount-input-wrap">
+          <input type="tel" id="setup-salary" placeholder="0" oninput="formatAmountInput(this)">
+          <span class="currency-label">сум</span>
+        </div>
+      </div>
+      <button class="btn btn-green" onclick="setupComplete()">Начать →</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main-app" style="display:none;flex-direction:column;height:100%">
+
+    <!-- HOME -->
+    <div id="screen-home" class="screen active">
+      <div class="hero">
+        <div class="month-nav">
+          <button onclick="changeMonth(-1)">‹</button>
+          <span class="month-label" id="month-label"></span>
+          <button onclick="changeMonth(1)">›</button>
+        </div>
+        <div class="balance-label">остаток</div>
+        <div class="amount-big" id="balance-display" style="margin:6px 0 4px">—</div>
+        <div><span class="badge" id="balance-badge"></span></div>
+        <div class="hero-stats">
+          <div class="stat-card income">
+            <div class="s-label">Бюджет + доход</div>
+            <div class="s-val" id="total-income">—</div>
+          </div>
+          <div class="stat-card expense">
+            <div class="s-label">Расходы</div>
+            <div class="s-val" id="total-expense">—</div>
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:2px">
+            <span>Использовано бюджета</span>
+            <span id="budget-pct">0%</span>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-fill" id="budget-progress" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title">Операции</div>
+      <div id="tx-list"></div>
+    </div>
+
+    <!-- ADD -->
+    <div id="screen-add" class="screen">
+      <div style="padding-top:18px">
+        <div class="modal-title">Новая операция</div>
+        <div class="type-toggle">
+          <button id="btn-expense" class="active-expense" onclick="setType('expense')">− Расход</button>
+          <button id="btn-income" onclick="setType('income')">+ Доход</button>
+        </div>
+        <div class="form-group">
+          <label>Сумма</label>
+          <div class="amount-input-wrap">
+            <input type="tel" id="add-amount" placeholder="0" oninput="formatAmountInput(this)">
+            <span class="currency-label">сум</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Название</label>
+          <input type="text" id="add-name" placeholder="например: Korzinka">
+        </div>
+        <div class="form-group">
+          <label>Категория</label>
+          <div class="cat-chips" id="add-cat-chips"></div>
+          <div class="more-cats-wrap">
+            <button class="more-cats-toggle" id="more-cats-btn" onclick="toggleMoreCats()" style="display:none">Ещё ›</button>
+            <div class="more-cats" id="more-cats-chips"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Дата</label>
+          <input type="date" id="add-date">
+        </div>
+        <button class="btn btn-green" onclick="addTransaction()">Добавить</button>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div id="screen-analytics" class="screen">
+      <div style="padding-top:18px">
+        <div class="modal-title">Аналитика</div>
+        <div id="analytics-content"></div>
+      </div>
+    </div>
+
+    <!-- WISHES -->
+    <div id="screen-wishes" class="screen">
+      <div style="padding-top:18px">
+        <div class="modal-title">Желания ⭐</div>
+        <div id="wishes-list"></div>
+        <button class="btn btn-outline" onclick="openWishModal()" style="margin-top:8px">+ Добавить желание</button>
+        <div class="section-title" style="margin-top:22px">Рекомендации</div>
+        <div id="recommendations"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="screen-settings" class="screen">
+      <div style="padding-top:18px">
+        <div class="modal-title">Настройки</div>
+
+        <div class="section-title">Оформление</div>
+        <div class="theme-toggle">
+          <button class="theme-btn" id="theme-dark" onclick="setTheme('dark')">🌙 Тёмная</button>
+          <button class="theme-btn" id="theme-light" onclick="setTheme('light')">☀️ Светлая</button>
+        </div>
+
+        <div class="section-title">Бюджет</div>
+        <div class="settings-row">
+          <div><div class="s-title">Бюджет месяца</div><div class="s-sub" id="settings-salary-display">—</div></div>
+          <button class="btn btn-sm btn-outline" onclick="openSalaryModal()">Изменить</button>
+        </div>
+
+        <div class="section-title">Категории расходов</div>
+        <div id="cat-manage-expense" style="margin-bottom:8px"></div>
+        <button class="btn btn-sm btn-outline" onclick="openAddCatModal('expense')">+ Добавить</button>
+
+        <div class="section-title">Категории доходов</div>
+        <div id="cat-manage-income" style="margin-bottom:8px"></div>
+        <button class="btn btn-sm btn-outline" onclick="openAddCatModal('income')">+ Добавить</button>
+
+        <div class="section-title">Экспорт</div>
+        <button class="btn btn-outline" onclick="exportExcel()">📥 Скачать Excel</button>
+
+        <div class="section-title" style="margin-top:8px">Аккаунт</div>
+        <div class="settings-row">
+          <div><div class="s-title" id="settings-user-name">—</div><div class="s-sub" id="settings-tg-id">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NAV -->
+    <nav>
+      <button class="active" id="nav-home" onclick="showScreen('home')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+        Главная
+      </button>
+      <button id="nav-add" onclick="showScreen('add')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+        Добавить
+      </button>
+      <button id="nav-analytics" onclick="showScreen('analytics')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 20h18M7 20V10M12 20V4M17 20v-6"/></svg>
+        Аналитика
+      </button>
+      <button id="nav-wishes" onclick="showScreen('wishes')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Желания
+      </button>
+      <button id="nav-settings" onclick="showScreen('settings')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Настройки
+      </button>
+    </nav>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay hidden" id="modal-wish">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Новое желание</div>
+    <div class="form-group">
+      <label>Эмодзи</label>
+      <div class="emoji-row" id="wish-emoji-row">
+        🎮 ✈️ 🚗 📱 💻 👟 🏠 🎓 💍 🎸 🏋️ 🌴 ⌚ 📷 🎯
+      </div>
+      <input type="text" id="wish-emoji-input" placeholder="или свой эмодзи" maxlength="2">
+    </div>
+    <div class="form-group">
+      <label>Название</label>
+      <input type="text" id="wish-name-input" placeholder="например: iPhone 16 Pro">
+    </div>
+    <div class="form-group">
+      <label>Стоимость</label>
+      <div class="amount-input-wrap">
+        <input type="tel" id="wish-price-input" placeholder="0" oninput="formatAmountInput(this)">
+        <span class="currency-label">сум</span>
+      </div>
+    </div>
+    <button class="btn btn-green" onclick="addWish()">Добавить</button>
+    <button class="btn btn-outline" onclick="closeModal('modal-wish')" style="margin-top:8px">Отмена</button>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="modal-cat">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-cat-title">Новая категория</div>
+    <div class="form-group">
+      <label>Эмодзи</label>
+      <div class="emoji-row" id="cat-emoji-row">
+        🍔 🚕 🏠 👗 💊 📚 🎬 ⚽ ☕ 🛒 💇 🐾 🔧 🎁 ✈️ 💼 💻 📈 💰 🏦
+      </div>
+      <input type="text" id="cat-emoji-input" placeholder="или свой эмодзи" maxlength="2">
+    </div>
+    <div class="form-group">
+      <label>Название</label>
+      <input type="text" id="cat-name-input" placeholder="например: Кофе">
+    </div>
+    <button class="btn btn-green" onclick="submitAddCat()">Добавить</button>
+    <button class="btn btn-outline" onclick="closeModal('modal-cat')" style="margin-top:8px">Отмена</button>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="modal-salary">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Бюджет месяца</div>
+    <div class="form-group">
+      <div class="amount-input-wrap">
+        <input type="tel" id="salary-edit-input" placeholder="0" oninput="formatAmountInput(this)">
+        <span class="currency-label">сум</span>
+      </div>
+    </div>
+    <button class="btn btn-green" onclick="saveSalary()">Сохранить</button>
+    <button class="btn btn-outline" onclick="closeModal('modal-salary')" style="margin-top:8px">Отмена</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────
+// ЗАМЕНИ НА СВОЙ URL ПОСЛЕ ДЕПЛОЯ НА RAILWAY
+const API = 'https://web-production-8029d6.up.railway.app';
+
+// ─── STATE ────────────────────────────────────────────────
+let TG_ID = '', USER_NAME = '', THEME = 'dark';
+let currentMonth = new Date().getMonth();
+let currentYear  = new Date().getFullYear();
+let currentType  = 'expense';
+let selectedCat  = '';
+let addingCatType = 'expense';
+let transactions = [], categories = [], wishes = [], budget = 0;
+
+const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь',
+                'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const CAT_COLORS = ['#f06b6b','#f5a623','#4ecb8d','#60a5fa','#a78bfa',
+                    '#fb7185','#34d399','#fbbf24','#818cf8','#f472b6'];
+
+// ─── AMOUNT FORMATTING ────────────────────────────────────
+function formatAmountInput(el) {
+  let raw = el.value.replace(/\D/g,'');
+  el.dataset.raw = raw;
+  if (!raw) { el.value = ''; return; }
+  el.value = parseInt(raw,10).toLocaleString('ru-RU');
+}
+function getRawAmount(el) {
+  return parseFloat((el.dataset.raw || el.value.replace(/\s/g,'')).replace(/\D/g,'')) || 0;
+}
+
+// ─── FORMAT ───────────────────────────────────────────────
+function fmt(n) {
+  return Math.round(n).toLocaleString('ru-RU') + ' сум';
+}
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── API HELPERS ──────────────────────────────────────────
+async function api(method, path, body) {
+  try {
+    const opts = { method, headers: {'Content-Type':'application/json'} };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(API + path, opts);
+    return await r.json();
+  } catch(e) {
+    console.error(e);
+    return null;
+  }
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+async function init() {
+  if (window.Telegram?.WebApp) {
+    Telegram.WebApp.ready();
+    Telegram.WebApp.expand();
+    const u = Telegram.WebApp.initDataUnsafe?.user;
+    if (u) {
+      TG_ID = String(u.id);
+      USER_NAME = u.first_name || 'Пользователь';
+    }
+  }
+  if (!TG_ID) TG_ID = 'dev_' + (localStorage.getItem('dev_id') || Math.random().toString(36).slice(2));
+  localStorage.setItem('dev_id', TG_ID.replace('dev_',''));
+
+  const user = await api('GET', `/users/${TG_ID}`);
+  if (user?.exists) {
+    USER_NAME = user.name || USER_NAME;
+    THEME = user.theme || 'dark';
+    applyTheme(THEME);
+    await loadAll();
+    showMain();
+  } else {
+    if (USER_NAME) document.getElementById('setup-name').value = USER_NAME;
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    document.getElementById('setup-screen').style.display = 'flex';
+  }
+}
+
+async function loadAll() {
+  const [cats, txs, ws, bud] = await Promise.all([
+    api('GET', `/categories?telegram_id=${TG_ID}`),
+    api('GET', `/transactions?telegram_id=${TG_ID}&year=${currentYear}&month=${currentMonth+1}`),
+    api('GET', `/wishes?telegram_id=${TG_ID}`),
+    api('GET', `/budget?telegram_id=${TG_ID}&year=${currentYear}&month=${currentMonth+1}`),
+  ]);
+  categories   = cats || [];
+  transactions = txs  || [];
+  wishes       = ws   || [];
+  budget       = bud?.amount || 0;
+}
+
+async function loadMonthData() {
+  const [txs, bud] = await Promise.all([
+    api('GET', `/transactions?telegram_id=${TG_ID}&year=${currentYear}&month=${currentMonth+1}`),
+    api('GET', `/budget?telegram_id=${TG_ID}&year=${currentYear}&month=${currentMonth+1}`),
+  ]);
+  transactions = txs || [];
+  budget       = bud?.amount || 0;
+}
+
+function showMain() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'flex';
+  renderAll();
+  setupEmojiPickers();
+  setupDragDrop();
+}
+
+// ─── SETUP ────────────────────────────────────────────────
+async function setupComplete() {
+  const name   = document.getElementById('setup-name').value.trim();
+  const amount = getRawAmount(document.getElementById('setup-salary'));
+  if (!name)   { showToast('Введи имя'); return; }
+  if (!amount) { showToast('Введи бюджет'); return; }
+  USER_NAME = name;
+  budget = amount;
+  await api('POST', '/users', { telegram_id: TG_ID, name, theme: THEME });
+  await api('POST', '/budget', { telegram_id: TG_ID, year: currentYear, month: currentMonth+1, amount });
+  await loadAll();
+  showMain();
+}
+
+// ─── THEME ────────────────────────────────────────────────
+function applyTheme(t) {
+  THEME = t;
+  document.documentElement.setAttribute('data-theme', t);
+  if (window.Telegram?.WebApp) {
+    const bg = t === 'dark' ? '#0f0f14' : '#eef4fc';
+    Telegram.WebApp.setHeaderColor(bg);
+    Telegram.WebApp.setBackgroundColor(bg);
+  }
+  document.getElementById('theme-dark')?.classList.toggle('active', t === 'dark');
+  document.getElementById('theme-light')?.classList.toggle('active', t === 'light');
+}
+async function setTheme(t) {
+  applyTheme(t);
+  await api('PATCH', '/users/theme', { telegram_id: TG_ID, theme: t });
+}
+
+// ─── MONTHS ───────────────────────────────────────────────
+async function changeMonth(d) {
+  currentMonth += d;
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  if (currentMonth < 0)  { currentMonth = 11; currentYear--; }
+  await loadMonthData();
+  renderAll();
+}
+
+// ─── RENDER ALL ───────────────────────────────────────────
+function renderAll() {
+  renderHome();
+  renderAnalytics();
+  renderWishes();
+  renderSettings();
+  applyTheme(THEME);
+}
+
+// ─── HOME ─────────────────────────────────────────────────
+function renderHome() {
+  const income  = transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const expense = transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const total   = budget + income;
+  const balance = total - expense;
+  const pct = total > 0 ? Math.min(100, Math.round(expense / total * 100)) : 0;
+
+  document.getElementById('month-label').textContent = MONTHS[currentMonth] + ' ' + currentYear;
+  document.getElementById('balance-display').textContent = fmt(balance);
+  document.getElementById('total-income').textContent  = fmt(total);
+  document.getElementById('total-expense').textContent = fmt(expense);
+  document.getElementById('budget-pct').textContent = pct + '%';
+
+  const prog = document.getElementById('budget-progress');
+  prog.style.width = pct + '%';
+  prog.style.background = pct > 90 ? 'var(--red)' : pct > 70 ? 'var(--amber)' : 'var(--green)';
+
+  const badge = document.getElementById('balance-badge');
+  if (balance < 0) {
+    badge.className = 'badge badge-red';
+    badge.textContent = 'Перерасход!';
+  } else if (pct >= 100) {
+    badge.className = 'badge badge-amber';
+    badge.textContent = 'Бюджет исчерпан';
+  } else {
+    badge.className = 'badge badge-green';
+    badge.textContent = pct + '% бюджета использовано';
+  }
+
+  // Transactions by day
+  const byDay = {};
+  transactions.forEach(t => {
+    if (!byDay[t.date]) byDay[t.date] = [];
+    byDay[t.date].push(t);
+  });
+  const sorted = Object.keys(byDay).sort((a,b) => b.localeCompare(a));
+  const list = document.getElementById('tx-list');
+
+  if (!sorted.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">📭</div><p>Операций пока нет.<br>Нажми + чтобы добавить.</p></div>`;
+    return;
+  }
+
+  const today = new Date().toISOString().slice(0,10);
+  const yest  = new Date(Date.now()-86400000).toISOString().slice(0,10);
+
+  list.innerHTML = sorted.map(day => {
+    const label = day === today ? 'Сегодня' : day === yest ? 'Вчера' : fmtDate(day);
+    const rows = byDay[day].map(t => {
+      const cat = categories.find(c=>c.id===t.cat_id) || {emoji:'💸', name:''};
+      return `<div class="tx-item">
+        <div class="tx-icon" style="background:${t.type==='income'?'var(--green-dim)':'var(--red-dim)'}">
+          ${cat.emoji}
+        </div>
+        <div class="tx-info">
+          <div class="tx-name">${esc(t.name)}</div>
+          <div class="tx-cat">${esc(cat.name)}</div>
+        </div>
+        <div class="tx-amount ${t.type==='income'?'plus':'minus'}">
+          ${t.type==='income'?'+':'−'}${fmt(t.amount)}
+        </div>
+        <button class="tx-delete" onclick="deleteTx(${t.id})">×</button>
+      </div>`;
+    }).join('');
+    return `<div class="day-group-label">${label}</div>${rows}`;
+  }).join('');
+}
+
+function fmtDate(d) {
+  const dt = new Date(d);
+  return dt.getDate() + ' ' + ['янв','фев','мар','апр','май','июн',
+    'июл','авг','сен','окт','ноя','дек'][dt.getMonth()];
+}
+
+// ─── ADD TRANSACTION ──────────────────────────────────────
+function setType(t) {
+  currentType = t; selectedCat = '';
+  document.getElementById('btn-expense').className = t==='expense' ? 'active-expense' : '';
+  document.getElementById('btn-income').className  = t==='income'  ? 'active-income'  : '';
+  renderCatChips();
+}
+
+function renderCatChips() {
+  const cats = categories.filter(c => c.cat_type === currentType);
+  const visible = cats.slice(0,5);
+  const hidden  = cats.slice(5);
+
+  document.getElementById('add-cat-chips').innerHTML = visible.map(c =>
+    `<button class="cat-chip${selectedCat===c.id?' selected':''}" onclick="selectCat('${c.id}')">${c.emoji} ${esc(c.name)}</button>`
+  ).join('');
+
+  const moreBtn   = document.getElementById('more-cats-btn');
+  const moreChips = document.getElementById('more-cats-chips');
+  if (hidden.length > 0) {
+    moreBtn.style.display = 'block';
+    moreChips.innerHTML = hidden.map(c =>
+      `<button class="cat-chip${selectedCat===c.id?' selected':''}" onclick="selectCat('${c.id}')">${c.emoji} ${esc(c.name)}</button>`
+    ).join('');
+  } else {
+    moreBtn.style.display = 'none';
+    moreChips.innerHTML = '';
+  }
+}
+
+function toggleMoreCats() {
+  const el = document.getElementById('more-cats-chips');
+  el.classList.toggle('open');
+  document.getElementById('more-cats-btn').textContent = el.classList.contains('open') ? 'Скрыть ‹' : 'Ещё ›';
+}
+
+function selectCat(id) { selectedCat = id; renderCatChips(); }
+
+async function addTransaction() {
+  const amount = getRawAmount(document.getElementById('add-amount'));
+  const name   = document.getElementById('add-name').value.trim();
+  const date   = document.getElementById('add-date').value || new Date().toISOString().slice(0,10);
+  if (!amount)     { showToast('Укажи сумму'); return; }
+  if (!name)       { showToast('Укажи название'); return; }
+  if (!selectedCat){ showToast('Выбери категорию'); return; }
+
+  const res = await api('POST', '/transactions', {
+    telegram_id: TG_ID, type: currentType, amount, name, cat_id: selectedCat, date
+  });
+  if (!res?.ok) { showToast('Ошибка, попробуй снова'); return; }
+
+  document.getElementById('add-amount').value = '';
+  document.getElementById('add-amount').dataset.raw = '';
+  document.getElementById('add-name').value = '';
+  selectedCat = '';
+  await loadMonthData();
+  renderAll();
+  showScreen('home');
+  showToast(currentType==='income' ? '✅ Доход добавлен' : '✅ Расход добавлен');
+}
+
+async function deleteTx(id) {
+  if (!confirm('Удалить операцию?')) return;
+  await api('DELETE', `/transactions/${id}?telegram_id=${TG_ID}`);
+  await loadMonthData();
+  renderAll();
+}
+
+// ─── ANALYTICS ────────────────────────────────────────────
+function renderAnalytics() {
+  const expenses  = transactions.filter(t=>t.type==='expense');
+  const totalExp  = expenses.reduce((s,t)=>s+t.amount,0);
+  const byCat = {};
+  expenses.forEach(t => { byCat[t.cat_id] = (byCat[t.cat_id]||0) + t.amount; });
+  const sorted = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+
+  let html = '';
+  if (!sorted.length) {
+    html = `<div class="empty"><div class="empty-icon">📊</div><p>Добавь расходы,<br>чтобы увидеть аналитику</p></div>`;
+  } else {
+    html += `<div class="card" style="margin-bottom:12px"><div class="card-row">
+      <span style="font-size:13px;color:var(--muted)">Всего расходов</span>
+      <span style="font-size:16px;font-weight:600;color:var(--red)">${fmt(totalExp)}</span>
+    </div></div>`;
+    sorted.forEach(([catId, amount], i) => {
+      const cat = categories.find(c=>c.id===catId) || {emoji:'💸', name:'Другое'};
+      const pct = Math.round(amount/totalExp*100);
+      const color = CAT_COLORS[i % CAT_COLORS.length];
+      html += `<div class="cat-bar-row">
+        <div class="cat-bar-top">
+          <div class="cat-bar-name"><span class="cat-dot" style="background:${color}"></span>${cat.emoji} ${esc(cat.name)}</div>
+          <div><span class="cat-bar-amount">${fmt(amount)}</span><span class="cat-bar-pct">${pct}%</span></div>
+        </div>
+        <div class="progress-wrap"><div class="progress-fill" style="width:${pct}%;background:${color}"></div></div>
+      </div>`;
+    });
+  }
+
+  const incomes = transactions.filter(t=>t.type==='income');
+  if (incomes.length) {
+    const totalInc = incomes.reduce((s,t)=>s+t.amount,0);
+    html += `<div class="section-title" style="margin-top:20px">Доп. доходы</div>
+      <div class="card"><div class="card-row">
+        <span style="font-size:13px;color:var(--muted)">Итого</span>
+        <span style="font-size:16px;font-weight:600;color:var(--green)">${fmt(totalInc)}</span>
+      </div></div>`;
+  }
+  document.getElementById('analytics-content').innerHTML = html;
+}
+
+// ─── WISHES ───────────────────────────────────────────────
+function renderWishes() {
+  const income  = transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const expense = transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const balance = budget + income - expense;
+  const savings = Math.max(0, balance);
+
+  const wlist = document.getElementById('wishes-list');
+  if (!wishes.length) {
+    wlist.innerHTML = `<div class="empty"><div class="empty-icon">⭐</div><p>Добавь мечту — увидишь<br>через сколько месяцев доберёшься</p></div>`;
+  } else {
+    wlist.innerHTML = wishes.map(w => {
+      const months = savings > 0 ? Math.ceil(w.price / savings) : null;
+      const mText  = months ? (months === 1 ? '1 месяц' : months + ' мес.') : '—';
+      const pct    = savings > 0 ? Math.min(100, Math.round(savings/w.price*100)) : 0;
+      return `<div class="wish-item">
+        <div class="wish-emoji-big">${w.emoji}</div>
+        <div class="wish-info">
+          <div class="wish-name">${esc(w.name)}</div>
+          <div class="wish-price">${fmt(w.price)}</div>
+          <div class="progress-wrap" style="margin:5px 0 3px"><div class="progress-fill" style="width:${pct}%;background:var(--purple)"></div></div>
+          <div class="wish-months">⏱ ${mText} при текущем остатке</div>
+        </div>
+        <button class="wish-del" onclick="deleteWish(${w.id})">×</button>
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('recommendations').innerHTML = generateRecs(balance, savings);
+}
+
+function generateRecs(balance, savings) {
+  if (balance < 0) return `<div class="rec-card">
+    <div class="rec-icon">⚠️</div>
+    <div class="rec-title">Перерасход</div>
+    <div class="rec-text">Расходы превысили бюджет на <span class="rec-highlight" style="color:var(--red)">${fmt(Math.abs(balance))}</span>. Попробуй сократить траты в следующие дни.</div>
+  </div>`;
+
+  let html = '';
+
+  if (wishes.length > 0) {
+    [...wishes].sort((a,b)=>a.price-b.price).forEach(w => {
+      if (savings <= 0) return;
+      const months = Math.ceil(w.price / savings);
+      const pct = Math.min(100, Math.round(savings/w.price*100));
+      html += `<div class="rec-card">
+        <div class="rec-icon">${w.emoji}</div>
+        <div class="rec-title">${esc(w.name)}</div>
+        <div class="rec-text">Накопишь за <span class="rec-highlight purple">${months === 1 ? '1 месяц' : months + ' месяцев'}</span>. За этот месяц уже <span class="rec-highlight purple">${pct}%</span> от цели!</div>
+      </div>`;
+    });
+  } else {
+    if (savings >= 10000000) {
+      html += `<div class="rec-card"><div class="rec-icon">🏦</div>
+        <div class="rec-title">Депозит в банке</div>
+        <div class="rec-text">У тебя <span class="rec-highlight">${fmt(savings)}</span> свободных. Депозит в Kapitalbank или TBC даёт до 22% годовых — это <span class="rec-highlight">${fmt(Math.round(savings*0.22))}</span> за год.</div></div>`;
+    }
+    if (savings >= 3000000) {
+      html += `<div class="rec-card"><div class="rec-icon">📈</div>
+        <div class="rec-title">Стратегия 30%</div>
+        <div class="rec-text">Откладывай по <span class="rec-highlight">${fmt(Math.round(savings*0.3))}</span> каждый месяц. Через год у тебя будет <span class="rec-highlight">${fmt(Math.round(savings*0.3*12))}</span>.</div></div>`;
+    }
+    html += `<div class="rec-card"><div class="rec-icon">🎯</div>
+      <div class="rec-title">Добавь цель!</div>
+      <div class="rec-text">Свободные <span class="rec-highlight">${fmt(savings)}</span> ждут применения. Добавь желание — и увидишь конкретный срок.</div></div>`;
+  }
+  return html;
+}
+
+// ─── WISHES CRUD ──────────────────────────────────────────
+function openWishModal() {
+  document.getElementById('wish-name-input').value = '';
+  document.getElementById('wish-price-input').value = '';
+  document.getElementById('wish-price-input').dataset.raw = '';
+  document.getElementById('wish-emoji-input').value = '';
+  document.querySelectorAll('#wish-emoji-row span').forEach(s=>s.classList.remove('picked'));
+  document.getElementById('modal-wish').classList.remove('hidden');
+}
+async function addWish() {
+  const emoji = document.getElementById('wish-emoji-input').value ||
+                document.querySelector('#wish-emoji-row span.picked')?.textContent.trim() || '⭐';
+  const name  = document.getElementById('wish-name-input').value.trim();
+  const price = getRawAmount(document.getElementById('wish-price-input'));
+  if (!name)  { showToast('Укажи название'); return; }
+  if (!price) { showToast('Укажи стоимость'); return; }
+  const res = await api('POST', '/wishes', { telegram_id: TG_ID, emoji, name, price });
+  if (!res?.ok) return;
+  wishes = (await api('GET', `/wishes?telegram_id=${TG_ID}`)) || [];
+  closeModal('modal-wish');
+  renderWishes();
+  showToast('⭐ Желание добавлено');
+}
+async function deleteWish(id) {
+  await api('DELETE', `/wishes/${id}?telegram_id=${TG_ID}`);
+  wishes = wishes.filter(w=>w.id!==id);
+  renderWishes();
+}
+
+// ─── CATEGORIES ───────────────────────────────────────────
+let addingForType = 'expense';
+function openAddCatModal(type) {
+  addingForType = type;
+  document.getElementById('modal-cat-title').textContent = type === 'expense' ? 'Новая категория расходов' : 'Новая категория доходов';
+  document.getElementById('cat-name-input').value = '';
+  document.getElementById('cat-emoji-input').value = '';
+  document.querySelectorAll('#cat-emoji-row span').forEach(s=>s.classList.remove('picked'));
+  document.getElementById('modal-cat').classList.remove('hidden');
+}
+async function submitAddCat() {
+  const emoji = document.getElementById('cat-emoji-input').value ||
+                document.querySelector('#cat-emoji-row span.picked')?.textContent.trim() || '📌';
+  const name  = document.getElementById('cat-name-input').value.trim();
+  if (!name) { showToast('Укажи название'); return; }
+  await api('POST', '/categories', { telegram_id: TG_ID, cat_type: addingForType, emoji, name });
+  categories = (await api('GET', `/categories?telegram_id=${TG_ID}`)) || [];
+  closeModal('modal-cat');
+  renderSettings();
+  renderCatChips();
+  showToast('✅ Категория добавлена');
+}
+async function deleteCat(id) {
+  await api('DELETE', `/categories/${id}?telegram_id=${TG_ID}`);
+  categories = categories.filter(c=>c.id!==id);
+  renderSettings();
+  renderCatChips();
+}
+
+// ─── DRAG & DROP REORDER ──────────────────────────────────
+let dragSrc = null;
+function setupDragDrop() {
+  ['expense','income'].forEach(type => renderCatManage(type));
+}
+
+function renderCatManage(type) {
+  const el = document.getElementById(`cat-manage-${type}`);
+  if (!el) return;
+  const cats = categories.filter(c=>c.cat_type===type);
+  el.innerHTML = cats.map(c => `
+    <div class="cat-manage-item" draggable="true" data-id="${c.id}" data-type="${type}"
+      ondragstart="onDragStart(event)" ondragover="onDragOver(event)"
+      ondrop="onDrop(event)" ondragend="onDragEnd(event)">
+      <span class="drag-handle">⠿</span>
+      <span class="cat-emoji-big">${c.emoji}</span>
+      <span class="cat-item-name">${esc(c.name)}</span>
+      <button class="cat-del-btn" onclick="deleteCat('${c.id}')">×</button>
+    </div>`).join('');
+}
+
+function onDragStart(e) {
+  dragSrc = e.currentTarget;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => dragSrc.classList.add('dragging'), 0);
+}
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const target = e.currentTarget;
+  if (target !== dragSrc && target.classList.contains('cat-manage-item')) {
+    const rect = target.getBoundingClientRect();
+    const mid  = rect.top + rect.height/2;
+    target.parentNode.insertBefore(dragSrc, e.clientY < mid ? target : target.nextSibling);
+  }
+}
+async function onDrop(e) {
+  e.preventDefault();
+}
+async function onDragEnd(e) {
+  dragSrc.classList.remove('dragging');
+  const type = dragSrc.dataset.type;
+  const container = document.getElementById(`cat-manage-${type}`);
+  const newOrder = [...container.querySelectorAll('.cat-manage-item')].map(el=>el.dataset.id);
+  await api('POST', '/categories/reorder', { telegram_id: TG_ID, cat_type: type, ordered_ids: newOrder });
+  categories = (await api('GET', `/categories?telegram_id=${TG_ID}`)) || [];
+  renderCatChips();
+  dragSrc = null;
+}
+
+// ─── SETTINGS ─────────────────────────────────────────────
+function renderSettings() {
+  document.getElementById('settings-salary-display').textContent = fmt(budget);
+  document.getElementById('settings-user-name').textContent = USER_NAME;
+  document.getElementById('settings-tg-id').textContent = 'Telegram ID: ' + TG_ID;
+  renderCatManage('expense');
+  renderCatManage('income');
+}
+
+function openSalaryModal() {
+  document.getElementById('salary-edit-input').value = budget ? budget.toLocaleString('ru-RU') : '';
+  document.getElementById('salary-edit-input').dataset.raw = budget || '';
+  document.getElementById('modal-salary').classList.remove('hidden');
+}
+async function saveSalary() {
+  const v = getRawAmount(document.getElementById('salary-edit-input'));
+  if (!v) { showToast('Укажи сумму'); return; }
+  await api('POST', '/budget', { telegram_id: TG_ID, year: currentYear, month: currentMonth+1, amount: v });
+  budget = v;
+  closeModal('modal-salary');
+  renderAll();
+  showToast('✅ Бюджет обновлён');
+}
+
+// ─── EXPORT ───────────────────────────────────────────────
+function exportExcel() {
+  window.location.href = `${API}/export/excel?telegram_id=${TG_ID}`;
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  if (name === 'add') {
+    document.getElementById('add-date').value = new Date().toISOString().slice(0,10);
+    renderCatChips();
+  }
+  if (name === 'settings') {
+    renderCatManage('expense');
+    renderCatManage('income');
+  }
+}
+
+// ─── MODAL ────────────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target===m) m.classList.add('hidden'); });
+});
+
+// ─── EMOJI PICKERS ────────────────────────────────────────
+function setupEmojiPickers() {
+  setupPicker('wish-emoji-row', 'wish-emoji-input');
+  setupPicker('cat-emoji-row',  'cat-emoji-input');
+}
+function setupPicker(rowId, inputId) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  const rawText = row.textContent;
+  const emojis = [...rawText.matchAll(/\p{Emoji}/gu)].map(m=>m[0]);
+  row.innerHTML = emojis.map(e=>`<span>${e}</span>`).join('');
+  row.querySelectorAll('span').forEach(el => {
+    el.onclick = () => {
+      row.querySelectorAll('span').forEach(s=>s.classList.remove('picked'));
+      el.classList.add('picked');
+      document.getElementById(inputId).value = el.textContent;
+    };
+  });
+}
+
+// ─── TOAST ────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+// ─── START ────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
