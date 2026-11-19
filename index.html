@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>Temir Kassa</title>
+<title>Temir Daftar</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -208,8 +208,8 @@ textarea.in{height:auto;min-height:72px;padding:12px 14px;resize:none}
   <!-- HOME -->
   <section class="screen" id="s-home" aria-label="Главная">
     <div class="top">
-      <div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round"><path d="M5 6h9M9.5 6v12M15 6v12M15 12l4.5-6M15 12l4.5 6"/></svg></div>
-      <div class="brand">Temir Kassa</div><div class="sp"></div>
+      <div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h10.5a6 6 0 0 1 0 12H9V6"/></svg></div>
+      <div class="brand">Temir Daftar</div><div class="sp"></div>
       <button class="icon-btn" aria-label="Новый долг" onclick="openDebtForm()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
     </div>
     <div id="demo-banner"></div>
@@ -558,7 +558,7 @@ async function savePlan(){
   catch(e){ toast(e.message); }
 }
 async function setStrategy(k){
-  S.user.strategy = k; renderPlan();
+  S.user.strategy = k; renderPlan(); renderMore();
   try { await api('PATCH','/api/settings',{strategy:k}); } catch(e){ toast(e.message); }
 }
 function split(monthly, monthYm){
@@ -619,7 +619,7 @@ function renderMore(){
   <div class="set-cap">План</div>
   <div class="set-group">
     <button class="set-row" onclick="planMode='amount';go('plan')"><span class="t"><b>Сумма в месяц</b></span><span class="v">${u.monthly_plan ? fmt(u.monthly_plan)+' сум' : 'не задана'}</span>${chev}</button>
-    <button class="set-row" onclick="go('plan')"><span class="t"><b>Что гасить первым</b></span><span class="v">${STRATS[u.strategy||'small']}</span>${chev}</button>
+    <button class="set-row" onclick="pickStrategy()"><span class="t"><b>Что гасить первым</b></span><span class="v">${STRATS[u.strategy||'small']}</span>${chev}</button>
   </div>
   <div class="set-cap">Внешний вид</div>
   <div class="set-group">
@@ -631,7 +631,15 @@ function renderMore(){
     <button class="set-row" onclick="exportExcel(this)"><span class="t"><b>Скачать Excel</b><span>Бот пришлёт файл со всеми долгами и платежами</span></span>${chev}</button>
     <button class="set-row danger" onclick="confirmDeleteAll()"><span class="t"><b>Удалить все данные</b><span>Спрошу ещё раз перед удалением</span></span></button>
   </div>
-  <div class="foot">Temir Kassa · твои данные видишь только ты</div>`;
+  <div class="foot">Temir Daftar · твои данные видишь только ты</div>`;
+}
+function pickStrategy(){
+  const cur = S.user.strategy || 'small';
+  const opts = [['small','Сначала мелкие','Быстрее закрываешь долги целиком, их становится меньше'],
+                ['urgent','Сначала срочные','Деньги идут туда, где срок закрытия ближе'],
+                ['even','Поровну','Каждому кредитору понемногу каждый месяц']];
+  openSheet(`<h2>Что гасить первым</h2><p class="small muted" style="margin:-8px 0 12px">Так я делю сумму месяца между долгами. Рассрочки с фиксированным платежом всегда идут первыми.</p>
+    <div class="pick">${opts.map(([k,t,d])=>`<button class="${k===cur?'on':''}" onclick="closeSheet();setStrategy('${k}')"><span style="flex:1"><b style="display:block;font-weight:600">${t}</b><span class="xs muted">${d}</span></span>${k===cur?'✓':''}</button>`).join('')}</div>`);
 }
 async function toggleSet(k){
   const v = !S.user[k]; S.user[k] = v; renderMore(); renderHome(); haptic('light');
