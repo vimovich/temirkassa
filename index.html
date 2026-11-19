@@ -10,15 +10,15 @@
 <style>
 :root{
   --ground:#f3f5f7; --surface:#fff; --raised:#f2f8fd; --border:#e6e6e6; --rule:#f0f1f3; --control:#d6d9dd;
-  --text:#1b1d1f; --muted:#5c6064; --faint:#a3a7ab; --accent:#1d5fd6; --accent-soft:#dcf1ff; --accent-ink:#0a3a80;
+  --text:#16181a; --muted:#565a5f; --faint:#a3a7ab; --field:#f4f6f8; --accent:#1d5fd6; --accent-soft:#dcf1ff; --accent-ink:#0a3a80;
   --positive:#2f7a45; --negative:#c41c29; --plan-bar:#c9dcf7; --grid:#eceef0;
   --pill-pos-bg:#dcfae5; --pill-pos-ink:#04250e; --pill-warn-bg:#fff4e0; --pill-warn-ink:#7a3a06;
   --pill-neu-bg:#eef1f4; --pill-neu-ink:#3a3d40; --primary:#1b1d1f; --on-primary:#fff; --scrim:rgba(15,16,17,.42);
-  --r-card:20px; --r-ctl:12px; --ease:cubic-bezier(.2,.8,.2,1);
+  --r-card:18px; --r-ctl:12px; --ease:cubic-bezier(.2,.8,.2,1);
 }
 html.dark{
   --ground:#0e0f10; --surface:#18191b; --raised:#1f2124; --border:#26282b; --rule:#222427; --control:#3a3d41;
-  --text:#eceef0; --muted:#9a9fa5; --faint:#6b7076; --accent:#5b8ff0; --accent-soft:#16264a; --accent-ink:#b9d0ff;
+  --text:#eef0f2; --muted:#a2a7ad; --faint:#6b7076; --field:#222428; --accent:#5b8ff0; --accent-soft:#16264a; --accent-ink:#b9d0ff;
   --positive:#5cc07d; --negative:#ff6b6b; --plan-bar:#2a3a58; --grid:#26282b;
   --pill-pos-bg:#14301e; --pill-pos-ink:#a6e8bb; --pill-warn-bg:#3a2a10; --pill-warn-ink:#ffcf87;
   --pill-neu-bg:#24262a; --pill-neu-ink:#c9cdd2; --primary:#eceef0; --on-primary:#0e0f10; --scrim:rgba(0,0,0,.6);
@@ -32,10 +32,17 @@ input,select,textarea{font:inherit;color:inherit}
 .app{max-width:480px;margin:0 auto;min-height:100vh;padding:env(safe-area-inset-top) 16px calc(96px + env(safe-area-inset-bottom));position:relative}
 .screen{display:none}
 .screen.on{display:block;animation:in .34s var(--ease)}
-@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes in{from{opacity:0}to{opacity:1}}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.st>*{animation:rise .5s var(--ease) both;animation-delay:calc(var(--i,0)*55ms)}
+.list.st>*{animation-duration:.42s;animation-delay:calc(var(--i,0)*40ms + 80ms)}
+.btn-primary{box-shadow:none}
+.nav button svg{transition:transform .25s var(--ease)}
+.nav button.on svg{transform:translateY(-1px) scale(1.08)}
+.sw::after{box-shadow:0 1px 2px rgba(0,0,0,.15)}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 
-.top{display:flex;align-items:center;gap:10px;height:56px}
+.top{display:flex;align-items:center;gap:10px;height:52px;margin-bottom:4px}
 .top .sp{flex:1}
 .mark{width:32px;height:32px;border-radius:50%;flex:none;display:block}
 .mark svg{width:18px;height:18px;stroke:var(--on-primary)}
@@ -43,37 +50,39 @@ input,select,textarea{font:inherit;color:inherit}
 .icon-btn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--muted);transition:background .15s}
 .icon-btn:active{background:var(--rule)}
 .back{margin-left:-8px;color:var(--text)}
-h1{font-size:24px;font-weight:600;letter-spacing:-.01em;line-height:1.2}
-h2{font-size:18px;font-weight:600}
+h1{font-size:22px;font-weight:700;letter-spacing:-.015em;line-height:1.2}
+h2{font-size:17px;font-weight:700;letter-spacing:-.005em}
 .muted{color:var(--muted)} .small{font-size:14px} .xs{font-size:13px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:20px}
-.gap{margin-top:16px}
-.sec{display:flex;align-items:baseline;justify-content:space-between;margin:28px 0 12px;gap:12px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:16px}
+.gap{margin-top:12px}
+.sec{display:flex;align-items:baseline;justify-content:space-between;margin:22px 2px 10px;gap:12px}
 .link{color:var(--accent);font-size:14px;font-weight:600}
 
-.total-label{font-size:14px;color:var(--muted);font-weight:500}
-.total{font-size:36px;font-weight:600;letter-spacing:-.02em;line-height:1.1;margin-top:4px;word-break:break-word}
+.total-label{font-size:13px;color:var(--muted);font-weight:600;letter-spacing:0}
+.total{font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1.1;margin-top:4px;word-break:break-word}
 .total .cur{font-size:20px;color:var(--muted);font-weight:500;margin-left:4px}
-.free{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:15px;text-align:left}
+.free{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:15px;text-align:left;padding:6px 10px 6px 8px;margin-left:-8px;border-radius:10px;transition:background .15s}
+.free:active{background:var(--rule)}
 .free b{font-weight:600}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--positive);flex:none}
 .dot.grey{background:var(--faint)}
-.bar{height:8px;border-radius:8px;background:var(--rule);overflow:hidden;margin-top:18px}
+.bar{height:8px;border-radius:8px;background:var(--rule);overflow:hidden;margin-top:12px}
 .bar i{display:block;height:100%;border-radius:8px;background:var(--accent);transform-origin:left;animation:grow 1s var(--ease) both .1s}
 @keyframes grow{from{transform:scaleX(0)}}
 .bar-legend{display:flex;justify-content:space-between;gap:8px;margin-top:8px;font-size:13px;color:var(--muted)}
 .bar-legend b{color:var(--text);font-weight:600}
-.month-fig{font-size:24px;font-weight:600;letter-spacing:-.01em;margin-top:2px}
+.month-fig{font-size:24px;font-weight:700;letter-spacing:-.01em;margin-top:2px}
 .month-fig span{font-size:15px;color:var(--muted);font-weight:500}
 
 .btn{height:48px;border-radius:var(--r-ctl);padding:0 20px;font-weight:600;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s,opacity .15s}
 .btn:active{transform:scale(.97)}
 .btn[disabled]{opacity:.45;pointer-events:none}
+.btn-primary[disabled]{opacity:1;background:var(--pill-neu-bg);color:var(--muted)}
 .btn-primary{background:var(--primary);color:var(--on-primary);width:100%}
 .btn-ghost{background:var(--pill-neu-bg);color:var(--text)}
 .btn-danger{background:transparent;color:var(--negative);width:100%}
 .btn-sm{height:40px;padding:0 14px;font-size:14px}
-.reminds{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.reminds{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
 .chip{height:28px;padding:0 10px;border-radius:8px;font-size:13px;font-weight:500;display:inline-flex;align-items:center;background:var(--pill-neu-bg);color:var(--pill-neu-ink)}
 .chip.done{background:var(--pill-pos-bg);color:var(--pill-pos-ink)}
 .chip.next{background:var(--accent-soft);color:var(--accent-ink)}
@@ -83,8 +92,8 @@ h2{font-size:18px;font-weight:600}
 .chart-key span{display:inline-flex;align-items:center;gap:6px}
 .chart-key i{width:10px;height:10px;border-radius:3px;display:inline-block}
 
-.list{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:4px 16px}
-.row{display:flex;align-items:center;gap:12px;padding:14px 0;width:100%;text-align:left;transition:opacity .15s}
+.list{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:2px 14px}
+.row{display:flex;align-items:center;gap:12px;padding:12px 0;width:100%;text-align:left;transition:opacity .15s}
 .row+.row{border-top:1px solid var(--rule)}
 .row:active{opacity:.6}
 .av{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-weight:600;font-size:16px;flex:none}
@@ -104,13 +113,13 @@ h2{font-size:18px;font-weight:600}
 
 .d-head{display:flex;gap:14px;align-items:center;margin-top:4px}
 .d-head .av{width:56px;height:56px;border-radius:18px;font-size:20px}
-.d-total{font-size:36px;font-weight:600;letter-spacing:-.02em;line-height:1.1;word-break:break-word}
+.d-total{font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1.1;word-break:break-word}
 .d-eq{font-size:15px;color:var(--muted);margin-top:4px}
-.facts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);border-radius:14px;overflow:hidden;margin-top:18px}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);border-radius:14px;overflow:hidden;margin-top:14px}
 .facts div{background:var(--raised);padding:12px 14px}
 .facts dt{font-size:13px;color:var(--muted)} .facts dd{font-weight:600;margin-top:2px}
 .note{margin-top:14px;font-size:14px;color:var(--muted);white-space:pre-wrap}
-.pay-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0}
+.pay-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0}
 .pay-row+.pay-row{border-top:1px solid var(--rule)}
 .pay-row .r{text-align:right;margin-left:auto}
 .del{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:var(--faint);flex:none}
@@ -120,11 +129,11 @@ h2{font-size:18px;font-weight:600}
 .seg.three{grid-template-columns:1fr 1fr 1fr}
 .seg button{height:40px;border-radius:9px;font-weight:600;font-size:14px;color:var(--muted);transition:background .2s,color .2s}
 .seg button.on{background:var(--surface);color:var(--text)}
-.amount{font-size:32px;font-weight:600;letter-spacing:-.02em;margin-top:6px}
+.amount{font-size:30px;font-weight:700;letter-spacing:-.02em;margin-top:6px}
 .amount span{font-size:18px;color:var(--muted);font-weight:500}
-input[type=range]{width:100%;margin-top:16px;accent-color:var(--accent);height:28px}
+input[type=range]{width:100%;margin-top:10px;accent-color:var(--accent);height:28px}
 .range-ends{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
-.result{margin-top:18px;padding:16px;border-radius:14px;background:var(--accent-soft);color:var(--accent-ink)}
+.result{margin-top:14px;padding:16px;border-radius:14px;background:var(--accent-soft);color:var(--accent-ink)}
 .result .big{font-size:22px;font-weight:600;margin-top:2px;letter-spacing:-.01em}
 .strat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .strat button{height:40px;padding:0 6px;border-radius:10px;font-size:14px;font-weight:600;background:var(--surface);border:1px solid var(--border);transition:background .15s}
@@ -137,20 +146,23 @@ input[type=range]{width:100%;margin-top:16px;accent-color:var(--accent);height:2
 .why{font-size:13px;color:var(--muted)}
 .sum-line{display:flex;justify-content:space-between;padding-top:12px;margin-top:4px;border-top:1px solid var(--border);font-weight:600}
 
-.set-cap{font-size:14px;color:var(--muted);margin:24px 4px 8px}
-.set-group{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:4px 16px}
-.set-row{display:flex;align-items:center;gap:12px;min-height:60px;padding:10px 0;width:100%;text-align:left}
+.set-cap{font-size:13px;font-weight:600;color:var(--muted);margin:18px 4px 6px}
+.set-cap:first-child{margin-top:4px}
+.set-group{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-card);padding:2px 14px}
+.set-row{display:flex;align-items:center;gap:12px;min-height:52px;padding:10px 0;width:100%;text-align:left;transition:opacity .15s}
+.set-row:active{opacity:.6}
+.set-ic{width:20px;height:20px;color:var(--muted);flex:none}
 .set-row+.set-row{border-top:1px solid var(--rule)}
 .set-row .t{flex:1;min-width:0}
 .set-row .t b{display:block;font-weight:600;font-size:15px}
-.set-row .t span{display:block;font-size:13px;color:var(--muted);margin-top:1px}
+.set-row .t span{display:block;font-size:13px;color:var(--muted);margin-top:1px;line-height:1.35}
 .set-row .v{font-size:14px;color:var(--muted);white-space:nowrap}
 .chev{color:var(--faint);flex:none}
 .sw{width:44px;height:26px;border-radius:13px;background:var(--control);position:relative;flex:none;transition:background .2s}
 .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s var(--ease)}
 .sw.on{background:var(--positive)} .sw.on::after{transform:translateX(18px)}
 .danger b{color:var(--negative)}
-.foot{font-size:12px;color:var(--muted);text-align:center;margin-top:28px}
+.foot{font-size:12px;color:var(--faint);text-align:center;margin-top:12px}
 
 .empty{text-align:center;padding:40px 12px 8px}
 .empty h2{font-size:20px}
@@ -164,18 +176,25 @@ input[type=range]{width:100%;margin-top:16px;accent-color:var(--accent);height:2
   box-shadow:0 -8px 32px rgba(0,0,0,.12);max-width:480px;margin:0 auto;overscroll-behavior:contain}
 .sheet.on{transform:none}
 .grab{width:40px;height:4px;border-radius:2px;background:var(--control);margin:2px auto 14px}
-.sheet h2{font-size:20px;margin-bottom:16px}
-.field{margin-top:14px}
-.field>label,.lbl{display:block;font-size:14px;font-weight:500;color:var(--muted);margin-bottom:6px}
-.in{width:100%;height:48px;border:1px solid var(--control);border-radius:12px;padding:0 14px;background:var(--surface);font-size:16px;outline:none;transition:border-color .15s}
-.in:focus{border-color:var(--accent)}
+.sheet h2{font-size:20px;margin-bottom:12px}
+.field{margin-top:12px}
+.field>label,.lbl{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+.in{width:100%;height:48px;border:1.5px solid transparent;border-radius:12px;padding:0 14px;background:var(--field);font-size:16px;outline:none;transition:border-color .15s,background .15s;-webkit-appearance:none;appearance:none}
+.in:focus{border-color:var(--accent);background:var(--surface)}
+.in::placeholder{color:var(--faint)}
+.fsec{margin-top:16px;padding-top:14px;border-top:1px solid var(--rule)}
+.fsec:first-of-type{margin-top:4px;padding-top:0;border-top:0}
+.fcap{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.02em;margin-bottom:2px}
+details.more summary{list-style:none;cursor:pointer;font-weight:600;font-size:14px;color:var(--accent);padding:10px 0 2px}
+details.more summary::-webkit-details-marker{display:none}
 textarea.in{height:auto;min-height:72px;padding:12px 14px;resize:none}
 .in.big{font-size:22px;font-weight:600;height:56px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .hint{font-size:13px;color:var(--muted);margin-top:6px}
 .err{font-size:13px;color:var(--negative);margin-top:10px;min-height:0}
-.presets{display:flex;gap:8px;flex-wrap:wrap}
-.presets button{height:34px;padding:0 12px;border-radius:10px;border:1px solid var(--border);font-size:14px;font-weight:500}
+.presets{display:flex;gap:6px;flex-wrap:wrap}
+.presets button{height:34px;padding:0 12px;border-radius:10px;background:var(--field);font-size:14px;font-weight:600;transition:background .15s,color .15s,transform .12s}
+.presets button:active{transform:scale(.95)}
 .presets button.on{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}
 .hues{display:flex;gap:10px}
 .hues button{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-weight:600;font-size:14px;outline:2px solid transparent;outline-offset:2px;transition:outline-color .15s}
@@ -184,8 +203,8 @@ textarea.in{height:auto;min-height:72px;padding:12px 14px;resize:none}
 .pick button{display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;text-align:left}
 .pick button.on{background:var(--raised)}
 .pick .av{width:36px;height:36px;border-radius:12px;font-size:14px}
-.sheet-actions{margin-top:20px;display:grid;gap:8px}
-.toggle-line{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;width:100%;text-align:left}
+.sheet-actions{margin-top:18px;display:grid;gap:8px}
+.toggle-line{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;width:100%;text-align:left}
 
 .toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translate(-50%,20px);opacity:0;background:var(--primary);color:var(--on-primary);
   padding:12px 16px;border-radius:12px;font-size:14px;font-weight:500;z-index:30;transition:opacity .2s,transform .25s var(--ease);max-width:calc(100% - 32px);pointer-events:none}
@@ -384,7 +403,7 @@ function renderHome(){
     : `<span class="dot grey"></span><span>Задай сумму в месяц, и я посчитаю дату свободы</span>`;
   let h = `<div class="card">
     <h1 class="total-label">Осталось отдать</h1>
-    <div class="total">${fmt(left)}<span class="cur">сум</span></div>
+    <div class="total" id="h-total">${fmt(left)}<span class="cur">сум</span></div>
     <button class="free" onclick="go('plan')">${freeLine}</button>
     <div class="bar"><i style="width:${pct}%"></i></div>
     <div class="bar-legend"><span>Отдано <b>${fmt(paid)} сум</b></span><span>${pct}% от ${fmt(all)}</span></div>
@@ -414,6 +433,7 @@ function renderHome(){
   if (od.length) h += `<div class="sec"><h2>Мои долги</h2><span class="muted small">${od.length} ${plural(od.length,'долг','долга','долгов')}</span></div>
     <div class="list">${od.map(rowHtml).join('')}</div>`;
   el.innerHTML = h;
+  countUp(document.getElementById('h-total'), left);
 }
 
 function chartSvg(plan){
@@ -604,6 +624,9 @@ function renderSplit(monthly){
 }
 
 /* ─── Settings ─── */
+const IC = {bell:'<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',report:'<path d="M5 20V10M12 20V4M19 20v-7"/>',clock:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',coins:'<rect x="3" y="6" width="18" height="12" rx="3"/><circle cx="12" cy="12" r="2.5"/>',order:'<path d="M4 7h10M4 12h7M4 17h4M18 5v14M15 16l3 3 3-3"/>',moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',archive:'<rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10h14V9M10 13h4"/>',download:'<path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"/>',trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'};
+const icon = n => `<svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
+
 function renderMore(){
   const u = S.user || {}, chev = '<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
   const sw = (k, on) => `<span class="sw ${on?'on':''}" role="switch" aria-checked="${!!on}"></span>`;
@@ -612,26 +635,26 @@ function renderMore(){
   document.getElementById('more-body').innerHTML = `
   <div class="set-cap">Напоминания в боте · в 10:00</div>
   <div class="set-group">
-    <button class="set-row" onclick="toggleSet('remind_on')"><span class="t"><b>Напоминать о платежах</b><span>10 и 20 числа: сколько осталось отдать в этом месяце</span></span>${sw('remind_on',u.remind_on)}</button>
-    <button class="set-row" onclick="toggleSet('report_on')"><span class="t"><b>Отчёт за месяц</b><span>1-го числа: сколько отдал и когда будешь свободен</span></span>${sw('report_on',u.report_on)}</button>
-    <button class="set-row" onclick="toggleSet('due_alert_on')"><span class="t"><b>Срок долга скоро</b><span>За 7 дней до даты, к которой нужно закрыть долг</span></span>${sw('due_alert_on',u.due_alert_on)}</button>
+    <button class="set-row" onclick="toggleSet('remind_on')">${icon('bell')}<span class="t"><b>Напоминать о платежах</b><span>10 и 20 числа: сколько осталось отдать в этом месяце</span></span>${sw('remind_on',u.remind_on)}</button>
+    <button class="set-row" onclick="toggleSet('report_on')">${icon('report')}<span class="t"><b>Отчёт за месяц</b><span>1-го числа: сколько отдал и когда будешь свободен</span></span>${sw('report_on',u.report_on)}</button>
+    <button class="set-row" onclick="toggleSet('due_alert_on')">${icon('clock')}<span class="t"><b>Срок долга скоро</b><span>За 7 дней до даты, к которой нужно закрыть долг</span></span>${sw('due_alert_on',u.due_alert_on)}</button>
   </div>
   <div class="set-cap">План</div>
   <div class="set-group">
-    <button class="set-row" onclick="planMode='amount';go('plan')"><span class="t"><b>Сумма в месяц</b></span><span class="v">${u.monthly_plan ? fmt(u.monthly_plan)+' сум' : 'не задана'}</span>${chev}</button>
-    <button class="set-row" onclick="pickStrategy()"><span class="t"><b>Что гасить первым</b></span><span class="v">${STRATS[u.strategy||'small']}</span>${chev}</button>
+    <button class="set-row" onclick="planMode='amount';go('plan')">${icon('coins')}<span class="t"><b>Сумма в месяц</b></span><span class="v">${u.monthly_plan ? fmt(u.monthly_plan)+' сум' : 'не задана'}</span>${chev}</button>
+    <button class="set-row" onclick="pickStrategy()">${icon('order')}<span class="t"><b>Что гасить первым</b></span><span class="v">${STRATS[u.strategy||'small']}</span>${chev}</button>
   </div>
   <div class="set-cap">Внешний вид</div>
   <div class="set-group">
-    <button class="set-row" onclick="pickTheme()"><span class="t"><b>Тема</b></span><span class="v">${themes[u.theme||'auto']}</span>${chev}</button>
+    <button class="set-row" onclick="pickTheme()">${icon('moon')}<span class="t"><b>Тема</b></span><span class="v">${themes[u.theme||'auto']}</span>${chev}</button>
   </div>
   <div class="set-cap">Данные</div>
   <div class="set-group">
-    <button class="set-row" onclick="go('list');setTimeout(()=>document.getElementById('closed')?.scrollIntoView({behavior:'smooth'}),80)"><span class="t"><b>Закрытые долги</b><span>Долги, которые ты уже отдал</span></span><span class="v">${closed}</span>${chev}</button>
-    <button class="set-row" onclick="exportExcel(this)"><span class="t"><b>Скачать Excel</b><span>Бот пришлёт файл со всеми долгами и платежами</span></span>${chev}</button>
-    <button class="set-row danger" onclick="confirmDeleteAll()"><span class="t"><b>Удалить все данные</b><span>Спрошу ещё раз перед удалением</span></span></button>
+    <button class="set-row" onclick="go('list');setTimeout(()=>document.getElementById('closed')?.scrollIntoView({behavior:'smooth'}),80)">${icon('archive')}<span class="t"><b>Закрытые долги</b><span>Долги, которые ты уже отдал</span></span><span class="v">${closed}</span>${chev}</button>
+    <button class="set-row" onclick="exportExcel(this)">${icon('download')}<span class="t"><b>Скачать Excel</b><span>Бот пришлёт файл со всеми долгами и платежами</span></span>${chev}</button>
+    <button class="set-row danger" onclick="confirmDeleteAll()">${icon('trash')}<span class="t"><b>Удалить все данные</b><span>Спрошу ещё раз перед удалением</span></span></button>
   </div>
-  <div class="foot">Temir Daftar · твои данные видишь только ты</div>`;
+  <div class="foot">Данные видишь только ты</div>`;
 }
 function pickStrategy(){
   const cur = S.user.strategy || 'small';
@@ -698,22 +721,33 @@ function openDebtForm(id){
   drawDebtForm(!!d);
 }
 function drawDebtForm(edit){
-  const hues = Object.keys(HUES).map(h=>{ const [bg,ink]=hue(h); return `<button type="button" class="${F.hue===h?'on':''}" style="background:${bg};color:${ink}" onclick="F.hue='${h}';syncForm();drawDebtForm(${edit})" aria-label="Цвет">${esc((F.who||'А').trim()[0]?.toUpperCase()||'А')}</button>`; }).join('');
+  const hues = Object.keys(HUES).map(h=>{ const [bg,ink]=hue(h); return `<button type="button" class="${F.hue===h?'on':''}" style="background:${bg};color:${ink}" onclick="syncForm();F.hue='${h}';F.moreOpen=true;drawDebtForm(${edit})" aria-label="Цвет">${esc((F.who||'А').trim()[0]?.toUpperCase()||'А')}</button>`; }).join('');
   openSheet(`<h2>${edit?'Изменить долг':'Новый долг'}</h2>
-    <div class="field"><label for="f-who">Кому должен</label><input class="in" id="f-who" maxlength="60" placeholder="Например, Акмаль" value="${esc(F.who||'')}"></div>
-    <div class="field"><span class="lbl">Кто это</span><div class="presets">${KINDS.map(k=>`<button type="button" class="${F.kind===k?'on':''}" onclick="syncForm();F.kind=F.kind==='${k}'?'':'${k}';drawDebtForm(${edit})">${k}</button>`).join('')}</div>
-      <input class="in" id="f-kind" maxlength="60" placeholder="Или своё: например, Uzum Nasiya" value="${esc(KINDS.includes(F.kind)?'':F.kind||'')}" style="margin-top:8px"></div>
-    <div class="field"><span class="lbl">Валюта долга</span><div class="seg"><button type="button" class="${F.cur==='UZS'?'on':''}" onclick="syncForm();F.cur='UZS';drawDebtForm(${edit})">Сумы</button><button type="button" class="${F.cur==='USD'?'on':''}" onclick="syncForm();F.cur='USD';drawDebtForm(${edit})">Доллары</button></div></div>
-    <div class="field"><label for="f-amount">Сколько брал${F.cur==='USD'?', $':', сум'}</label><input class="in big" id="f-amount" inputmode="decimal" placeholder="0" value="${F.amount?fmtIn(F.amount):''}" oninput="liveFmt(this);rateHint()"></div>
-    ${F.cur==='USD'?`<div class="field"><label for="f-rate">Курс, по которому брал (сум за $1)</label><input class="in" id="f-rate" inputmode="decimal" placeholder="Например, 12 650" value="${F.rate?fmtIn(F.rate):''}" oninput="liveFmt(this);rateHint()"><div class="hint" id="rate-hint"></div></div>`:''}
-    <div class="two field"><div><label for="f-taken">Когда брал</label><input class="in" id="f-taken" type="date" value="${F.taken||''}" max="${iso(S.today)}"></div>
-      <div><label for="f-due">Закрыть до</label><input class="in" id="f-due" type="date" value="${F.due||''}"></div></div>
-    <button type="button" class="toggle-line" onclick="syncForm();F.fixedOn=!F.fixedOn;drawDebtForm(${edit})"><span><b style="font-weight:600">Фиксированный платёж каждый месяц</b><span class="hint" style="display:block;margin-top:2px">Для рассрочки: сумма и число месяца</span></span><span class="sw ${F.fixedOn?'on':''}"></span></button>
-    ${F.fixedOn?`<div class="two field"><div><label for="f-fixed">Платёж${F.cur==='USD'?', $':', сум'}</label><input class="in" id="f-fixed" inputmode="decimal" value="${F.fixed?fmtIn(F.fixed):''}" oninput="liveFmt(this)"></div><div><label for="f-day">Какого числа</label><input class="in" id="f-day" inputmode="numeric" maxlength="2" value="${F.pay_day||''}"></div></div>`:''}
-    <div class="field"><span class="lbl">Цвет</span><div class="hues">${hues}</div></div>
-    <div class="field"><label for="f-note">Заметка</label><textarea class="in" id="f-note" maxlength="300" placeholder="Необязательно">${esc(F.note||'')}</textarea></div>
+    <div class="fsec">
+      <div class="field" style="margin-top:0"><label for="f-who">Кому должен</label><input class="in" id="f-who" maxlength="60" placeholder="Например, Акмаль" value="${esc(F.who||'')}" autocomplete="off"></div>
+      <div class="field"><span class="lbl">Кто это</span><div class="presets">${KINDS.map(k=>`<button type="button" class="${F.kind===k?'on':''}" onclick="syncForm();F.kind=F.kind==='${k}'?'':'${k}';drawDebtForm(${edit})">${k}</button>`).join('')}</div>
+        <input class="in" id="f-kind" maxlength="60" placeholder="Или своё, например Uzum Nasiya" value="${esc(KINDS.includes(F.kind)?'':F.kind||'')}" style="margin-top:8px;height:44px;font-size:15px"></div>
+    </div>
+    <div class="fsec">
+      <div class="fcap">Сумма</div>
+      <div class="field" style="margin-top:6px"><div class="seg"><button type="button" class="${F.cur==='UZS'?'on':''}" onclick="syncForm();F.cur='UZS';drawDebtForm(${edit})">Сумы</button><button type="button" class="${F.cur==='USD'?'on':''}" onclick="syncForm();F.cur='USD';drawDebtForm(${edit})">Доллары</button></div></div>
+      <div class="field"><label for="f-amount">Сколько брал${F.cur==='USD'?', $':', сум'}</label><input class="in big" id="f-amount" inputmode="decimal" placeholder="0" value="${F.amount?fmtIn(F.amount):''}" oninput="liveFmt(this);rateHint()"></div>
+      ${F.cur==='USD'?`<div class="field"><label for="f-rate">Курс, по которому брал</label><input class="in" id="f-rate" inputmode="decimal" placeholder="Сум за $1, например 12 650" value="${F.rate?fmtIn(F.rate):''}" oninput="liveFmt(this);rateHint()"><div class="hint" id="rate-hint"></div></div>`:''}
+    </div>
+    <div class="fsec">
+      <div class="fcap">Сроки</div>
+      <div class="two field" style="margin-top:6px"><div><label for="f-taken">Когда брал</label><input class="in" id="f-taken" type="date" value="${F.taken||''}" max="${iso(S.today)}"></div>
+        <div><label for="f-due">Закрыть до</label><input class="in" id="f-due" type="date" value="${F.due||''}"></div></div>
+      <button type="button" class="toggle-line" onclick="syncForm();F.fixedOn=!F.fixedOn;drawDebtForm(${edit})"><span><b style="font-weight:600;font-size:15px">Платёж каждый месяц</b><span class="hint" style="display:block;margin-top:1px">Для рассрочки: фиксированная сумма и число</span></span><span class="sw ${F.fixedOn?'on':''}"></span></button>
+      ${F.fixedOn?`<div class="two field"><div><label for="f-fixed">Платёж${F.cur==='USD'?', $':', сум'}</label><input class="in" id="f-fixed" inputmode="decimal" value="${F.fixed?fmtIn(F.fixed):''}" oninput="liveFmt(this)"></div><div><label for="f-day">Какого числа</label><input class="in" id="f-day" inputmode="numeric" maxlength="2" placeholder="1–31" value="${F.pay_day||''}"></div></div>`:''}
+    </div>
+    <details class="more fsec" ${F.note||F.moreOpen?'open':''} ontoggle="F.moreOpen=this.open">
+      <summary>Цвет и заметка</summary>
+      <div class="field"><div class="hues">${hues}</div></div>
+      <div class="field"><textarea class="in" id="f-note" maxlength="300" placeholder="Заметка, необязательно">${esc(F.note||'')}</textarea></div>
+    </details>
     <div class="err" id="f-err"></div>
-    <div class="sheet-actions"><button class="btn btn-primary" id="f-save" onclick="saveDebt(${edit})">${edit?'Сохранить':'Добавить долг'}</button>
+    <div class="sheet-actions" style="margin-top:16px"><button class="btn btn-primary" id="f-save" onclick="saveDebt(${edit})">${edit?'Сохранить':'Добавить долг'}</button>
       ${edit?`<button class="btn btn-danger" onclick="confirmDelDebt()">Удалить долг</button>`:''}</div>`);
   rateHint();
 }
@@ -843,6 +877,23 @@ function go(s){
   document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('on', e.id==='s-'+s));
   document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on', b.dataset.go===(s==='debt'?'list':s)));
   window.scrollTo(0,0); syncBack();
+  animateIn(document.querySelector('#s-'+s+' [id$="-body"]'));
+}
+function animateIn(root){
+  if (!root || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const groups = [root, ...root.querySelectorAll('.list,.set-group')];
+  groups.forEach(g=>{ g.classList.remove('st'); [...g.children].forEach((c,i)=>c.style.setProperty('--i', Math.min(i,10))); });
+  void root.offsetWidth;
+  groups.forEach(g=>g.classList.add('st'));
+}
+let shownTotal = null;
+function countUp(el, to){
+  if (!el) return;
+  const from = shownTotal===null ? to*0.85 : shownTotal; shownTotal = to;
+  if (Math.abs(to-from) < 1 || matchMedia('(prefers-reduced-motion: reduce)').matches){ el.firstChild.nodeValue = fmt(to); return; }
+  const t0 = performance.now(), d = 700;
+  const step = t => { const k = Math.min(1,(t-t0)/d), e = 1-Math.pow(1-k,3); el.firstChild.nodeValue = fmt(from+(to-from)*e); if (k<1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
 }
 function syncBack(){
   if (!TG?.BackButton) return;
@@ -879,6 +930,7 @@ async function start(){
   if (DEMO) document.getElementById('demo-banner').innerHTML = `<div class="banner">Демо с примерными данными. Откройте приложение через бота в Telegram, чтобы увидеть свои долги.</div>`;
   const h = (location.hash||'').slice(1);
   if (h==='pay'){ go('home'); openPayForm(); }
+  else if (h==='new'){ go('home'); openDebtForm(); }
   else if (h.startsWith('debt-') && S.debts.some(d=>d.id===+h.slice(5))){ lastScreen='list'; openDebt(+h.slice(5)); openPayForm(+h.slice(5)); }
   else go(['list','plan','more'].includes(h) ? h : 'home');
 }
