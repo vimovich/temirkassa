@@ -175,7 +175,14 @@ input[type=range]{width:100%;margin-top:10px;accent-color:var(--accent);height:2
   border-radius:22px 22px 0 0;padding:8px 16px calc(20px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .32s var(--ease);
   box-shadow:0 -8px 32px rgba(0,0,0,.12);max-width:480px;margin:0 auto;overscroll-behavior:contain}
 .sheet.on{transform:none}
-.grab{width:40px;height:4px;border-radius:2px;background:var(--control);margin:2px auto 14px}
+.grab{height:26px;margin:-8px -16px 4px;display:grid;place-items:center;cursor:grab;touch-action:none}
+.grab::before{content:"";width:40px;height:5px;border-radius:3px;background:var(--control)}
+.sheet.drag{transition:none}
+.help-block{font-size:15px;line-height:1.5}
+.help-block code{background:var(--field);padding:2px 6px;border-radius:6px;font-family:inherit;font-weight:600;font-size:14px}
+.help-block p{margin-top:10px}
+.help-block .ex{color:var(--muted);font-size:13px}
+.help-block h3{font-size:15px;font-weight:700;margin-top:16px}
 .sheet h2{font-size:20px;margin-bottom:12px}
 .field{margin-top:12px}
 .field>label,.lbl{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
@@ -624,7 +631,7 @@ function renderSplit(monthly){
 }
 
 /* ─── Settings ─── */
-const IC = {bell:'<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',report:'<path d="M5 20V10M12 20V4M19 20v-7"/>',clock:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',coins:'<rect x="3" y="6" width="18" height="12" rx="3"/><circle cx="12" cy="12" r="2.5"/>',order:'<path d="M4 7h10M4 12h7M4 17h4M18 5v14M15 16l3 3 3-3"/>',moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',archive:'<rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10h14V9M10 13h4"/>',download:'<path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"/>',trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'};
+const IC = {bell:'<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',report:'<path d="M5 20V10M12 20V4M19 20v-7"/>',clock:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',coins:'<rect x="3" y="6" width="18" height="12" rx="3"/><circle cx="12" cy="12" r="2.5"/>',order:'<path d="M4 7h10M4 12h7M4 17h4M18 5v14M15 16l3 3 3-3"/>',chat:'<path d="M5 18l-1 3 4-2h9a3 3 0 0 0 3-3V8a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v7"/><path d="M8 10h8M8 13.5h5"/>',moon:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',archive:'<rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v10h14V9M10 13h4"/>',download:'<path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"/>',trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'};
 const icon = n => `<svg class="set-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]}</svg>`;
 
 function renderMore(){
@@ -643,6 +650,10 @@ function renderMore(){
   <div class="set-group">
     <button class="set-row" onclick="planMode='amount';go('plan')">${icon('coins')}<span class="t"><b>Сумма в месяц</b></span><span class="v">${u.monthly_plan ? fmt(u.monthly_plan)+' сум' : 'не задана'}</span>${chev}</button>
     <button class="set-row" onclick="pickStrategy()">${icon('order')}<span class="t"><b>Что гасить первым</b></span><span class="v">${STRATS[u.strategy||'small']}</span>${chev}</button>
+  </div>
+  <div class="set-cap">Бот</div>
+  <div class="set-group">
+    <button class="set-row" onclick="showBotHelp()">${icon('chat')}<span class="t"><b>Команды бота</b><span>Как записать платёж прямо в чате</span></span>${chev}</button>
   </div>
   <div class="set-cap">Внешний вид</div>
   <div class="set-group">
@@ -668,6 +679,19 @@ async function toggleSet(k){
   const v = !S.user[k]; S.user[k] = v; renderMore(); renderHome(); haptic('light');
   try { await api('PATCH','/api/settings',{[k]:v}); } catch(e){ S.user[k] = !v; renderMore(); toast(e.message); }
 }
+function showBotHelp(){
+  openSheet(`<h2>Команды бота</h2><div class="help-block">
+    <h3 style="margin-top:0">Отдал часть долга</h3>
+    <p>Напиши боту одной строкой, кому и сколько:<br><code>Акмаль 500 000</code></p>
+    <p class="ex">Бот запишет платёж, покажет остаток и под ответом даст кнопку «Отменить».</p>
+    <h3>Отдал в другой день</h3><p>Добавь дату: <code>Акмаль 500к 12.11</code></p>
+    <h3>Долг в долларах</h3><p><code>Джасур 200$</code><br>или сумами по курсу того дня:<br><code>Джасур 2,6 млн по 12 900</code></p>
+    <p class="ex">Сумму можно писать как удобно: 5 млн, 5м, 500к или 5 000 000. Если имя подходит к нескольким долгам, бот спросит кнопками.</p>
+    <h3>Команды</h3>
+    <p><code>/plan</code> — сколько отдать в этом месяце и кому<br><code>/dolgi</code> — все долги с остатками<br><code>/report</code> — сводка: сколько отдано и когда свободен<br><code>/help</code> — эта подсказка в чате</p>
+  </div>
+  <div class="sheet-actions"><button class="btn btn-primary" onclick="closeSheet();try{TG.close()}catch(e){}">Перейти в чат с ботом</button></div>`);
+}
 function pickTheme(){
   const cur = S.user.theme || 'auto';
   openSheet(`<h2>Тема</h2><div class="pick">${[['auto','Как в Telegram'],['light','Светлая'],['dark','Тёмная']].map(([k,v])=>`<button class="${k===cur?'on':''}" onclick="setTheme('${k}')"><span style="flex:1;font-weight:600">${v}</span>${k===cur?'✓':''}</button>`).join('')}</div>`);
@@ -692,6 +716,39 @@ async function deleteAll(){
 
 /* ─── Sheets ─── */
 let sheetOpen = false;
+(function sheetGestures(){
+  const sh = () => document.getElementById('sheet');
+  let startY = null, dy = 0, t0 = 0;
+  const isField = el => el.closest('input,textarea,select,.seg,.presets,.hues');
+  function down(y, target){
+    if (!sheetOpen) return;
+    const fromGrab = !!target.closest('.grab');
+    if (!fromGrab && (sh().scrollTop > 0 || isField(target))) return;
+    startY = y; dy = 0; t0 = performance.now();
+  }
+  function move(y, e){
+    if (startY===null) return;
+    dy = Math.max(0, y - startY);
+    if (dy > 6){ sh().classList.add('drag'); sh().style.transform = `translateY(${dy}px)`; document.getElementById('scrim').style.opacity = Math.max(0, 1 - dy/400); if (e.cancelable) e.preventDefault(); }
+  }
+  function up(){
+    if (startY===null) return;
+    const v = dy / Math.max(1, performance.now()-t0);
+    sh().classList.remove('drag'); sh().style.transform = ''; document.getElementById('scrim').style.opacity = '';
+    if (dy > 110 || (dy > 40 && v > .5)) closeSheet();
+    startY = null; dy = 0;
+  }
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const el = sh();
+    el.addEventListener('touchstart', e=>down(e.touches[0].clientY, e.target), {passive:true});
+    el.addEventListener('touchmove', e=>move(e.touches[0].clientY, e), {passive:false});
+    el.addEventListener('touchend', up); el.addEventListener('touchcancel', up);
+    el.addEventListener('mousedown', e=>{ if (e.target.closest('.grab') || e.target.closest('h2')) { down(e.clientY, el.querySelector('.grab')); e.preventDefault(); } });
+    window.addEventListener('mousemove', e=>move(e.clientY, e));
+    window.addEventListener('mouseup', up);
+    window.addEventListener('keydown', e=>{ if (e.key==='Escape' && sheetOpen) closeSheet(); });
+  });
+})();
 function openSheet(html, focusId){
   document.getElementById('sheet-body').innerHTML = html;
   document.getElementById('scrim').classList.add('on');
@@ -931,6 +988,7 @@ async function start(){
   const h = (location.hash||'').slice(1);
   if (h==='pay'){ go('home'); openPayForm(); }
   else if (h==='new'){ go('home'); openDebtForm(); }
+  else if (h==='help'){ go('more'); showBotHelp(); }
   else if (h.startsWith('debt-') && S.debts.some(d=>d.id===+h.slice(5))){ lastScreen='list'; openDebt(+h.slice(5)); openPayForm(+h.slice(5)); }
   else go(['list','plan','more'].includes(h) ? h : 'home');
 }
